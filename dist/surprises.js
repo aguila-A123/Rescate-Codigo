@@ -1,0 +1,12 @@
+// Surprise encounters count only active puzzle time; never interrupt another scene.
+const beforeSurpriseStop=stopLoops,beforeSurpriseRender=render,beforeSurpriseResume=resumeAdventure;
+let surpriseInterval=null,surpriseWait=0,surpriseLast=0,surpriseWasPlaying=false,lastSurpriseKind=null;
+const surpriseKinds=['meteor','memory','icons','dial','keys'];
+const surpriseNames={meteor:'Lluvia de estrellas',memory:'El eco de las runas',icons:'El jardín de los espejismos',dial:'La aguja del destino',keys:'Las runas veloces'};
+function resetSurpriseWait(){surpriseWait=12000+Math.random()*16000;surpriseLast=performance.now();surpriseWasPlaying=false}
+stopLoops=function(){beforeSurpriseStop();clearInterval(surpriseInterval);surpriseInterval=null;surpriseWait=0;surpriseWasPlaying=false;lastSurpriseKind=null};
+function ensureSurprises(){if(!session||surpriseInterval||session.phase!=='puzzle')return;resetSurpriseWait();surpriseInterval=setInterval(surpriseTick,100)}
+function surpriseTick(){const now=performance.now();if(!session||['lost','won'].includes(session.phase)){clearInterval(surpriseInterval);surpriseInterval=null;return}const playing=session.phase==='puzzle'&&!document.hidden&&session.remaining>0;if(playing&&surpriseWasPlaying)surpriseWait-=now-surpriseLast;surpriseLast=now;surpriseWasPlaying=playing;if(playing&&surpriseWait<=0){resetSurpriseWait();prepareTrial()}}
+render=function(){beforeSurpriseRender();ensureSurprises()};
+resumeAdventure=function(){beforeSurpriseResume();if(session?.phase==='puzzle'){resetSurpriseWait();ensureSurprises()}};
+prepareTrial=function(){if(!session||session.phase!=='puzzle'||session.remaining<=0)return;session.phase='trial';session.last=performance.now();resetSurpriseWait();clearInterval(introInterval);const choices=surpriseKinds.filter(k=>k!==lastSurpriseKind);const kind=choices[Math.floor(Math.random()*choices.length)];lastSurpriseKind=kind;const expectedSession=session;trial={kind,active:false};const expectedTrial=trial;showOverlay('<div class="surprise-notice"><h2>'+surpriseNames[kind]+'</h2></div>');document.querySelector('#challengeOverlay .challenge').classList.add('surprise-card');const startAt=performance.now()+1000;introInterval=setInterval(()=>{if(session!==expectedSession||session.phase!=='trial'||trial!==expectedTrial){clearInterval(introInterval);introInterval=null;return}if(performance.now()>=startAt){clearInterval(introInterval);introInterval=null;({meteor:startMeteor,memory:startMemory,icons:startIcons,dial:startDial,keys:startKeys}[kind])()}},20)};

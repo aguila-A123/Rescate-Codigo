@@ -1,0 +1,1 @@
+.surprise-card{background:transparent;border:0;box-shadow:none;padding:0}.surprise-notice{animation:surpriseNotice 1s both}.surprise-notice h2{font-size:clamp(32px,6vw,60px);color:#efdaac;text-shadow:0 0 35px #d7b27666;margin:0}@keyframes surpriseNotice{0%{opacity:0;transform:translateY(10px) scale(.94)}15%,75%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-8px)}}
